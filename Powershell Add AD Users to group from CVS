@@ -16,7 +16,14 @@ foreach ($User in $Users) {
     if (Get-ADUser -F {SamAccountName -eq $Username}) {
          #If user does exist, give a warning
          Write-Warning "A user account with username $Username already exist in Active Directory."
+         
+          #add user to the group"DLMsgSize20Mb"
          Add-ADGroupMember -Identity “DLMsgSize20Mb” -Members $Username
+         Write-Warning "A user $Username added to the Group DLMsgSize20Mb "
+  
+         #user removed from the Group DLMsgSize10M
+         Remove-ADGroupMember -Identity “DLMsgSize10Mb” -Members $Username -Confirm:$True     
+         Write-Warning "A user $Username removed from the Group DLMsgSize10Mb "
     }
     else {
         # User does not exist then proceed to create the new user account

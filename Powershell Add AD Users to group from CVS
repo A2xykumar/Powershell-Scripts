@@ -1,0 +1,28 @@
+Powershell commands for adding users to group from Csv file.
+==================================================================================
+ #Import active directory module for running AD cmdlets
+Import-Module activedirectory
+
+#Store the data from ADUsers.csv in the $ADUsers variable
+$Users = Import-csv C:\Users\z_ext_ex1\Documents\FilterUser.csv
+
+#Loop through each row containing user details in the CSV file 
+foreach ($User in $Users) {
+    # Read user data from each field in each row
+    # the username is used more often, so to prevent typing, save that in a variable
+   $Username       = $User.SamAccountName
+
+    # Check to see if the user already exists in AD
+    if (Get-ADUser -F {SamAccountName -eq $Username}) {
+         #If user does exist, give a warning
+         Write-Warning "A user account with username $Username already exist in Active Directory."
+         Add-ADGroupMember -Identity “DLMsgSize20Mb” -Members $Username
+    }
+    else {
+        # User does not exist then proceed to create the new user account
+         Write-Warning "A user account with username $Username already not exist in Active Directory."
+       #  Write-Host "The user account $User is created." -ForegroundColor Cyan
+    } #end else
+} 
+
+==================================================================================

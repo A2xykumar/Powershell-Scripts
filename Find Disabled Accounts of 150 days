@@ -1,0 +1,72 @@
+########################################################################################
+# Record the time when the script starts running 
+# Exchange Mailbox Delete Report started at - "
+$AccountDelate = (Get-Date).tostring("dd-MM-yyyy-hh-mm")            
+New-Item -itemType File -Path G:\ -Name ("Exchange Mailbox Delete Report started at -"+$AccountDelate + ".txt")
+##################################################################################
+
+
+
+##################################################################################
+# Create a Log File Using FileSystemObject to record the updates 
+$AccountDelate = (Get-Date).tostring("dd-MM-yyyy-hh-mm-ss")            
+New-Item -itemType File -Path G:\ -Name ("Account Delate "+$AccountDelate + ".txt")
+
+#####################################################################################
+
+
+
+#'	'##########################################################################	
+#'	' #Fetch the AD record based on Staff Number of the User
+#Store the data from ADUsers.csv in the $ADUsers variable
+
+$UserCSV   = 'C:\Users\z_ext_ex1\Documents\FilterUser.csv'
+$OutputCSV = 'G:\UserStatusOutput.csv'
+$Users = Import-Csv -Path $UserCSV | Select-Object -ExpandProperty SamAccountName
+$date = (get-date).AddDays(-150)
+
+#'	'##########################################################################
+
+
+
+#'	'##########################################################################
+#'	' If a record exists in Active Directory, continue 
+
+$Results =foreach( $User in $Users )
+{
+
+#'		'##########################################################################		
+#'		' Get the User Object based on the LDAP Path from Active Directory
+#'		'##########################################################################
+    $Account = Get-ADUser -Filter { SamAccountName -eq $User }
+   
+    $Expired = Get-ADUser -Filter {Accountexpirationdate -lt $date} -properties Accountexpirationdate | Select-Object Name, Accountexpirationdate
+   
+    if( $Account )
+    {
+         if( $Expired )
+        {
+           $Account | Select-Object -Property SamAccountName, Enabled, Accountexpirationdate  
+        }
+        else{
+         $Account | Select-Object -Property SamAccountName, Enabled
+            }
+        }
+    }
+
+       else{
+        [pscustomobject]@{
+            SamAccountName = $User
+            Enabled        = 'Account Not Found'
+            }
+        }
+    }
+
+
+#'		'##########################################################################
+#'		' Get user details to delete
+#'		'##########################################################################
+
+$Results | Export-Csv -Path $OutputCSV -NoTypeInformation
+
+'	'##########################################################################

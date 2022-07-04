@@ -20,7 +20,7 @@ New-Item -itemType File -Path G:\ -Name ("Account Delate "+$AccountDelate + ".tx
 #'	' #Fetch the AD record based on Staff Number of the User
 #Store the data from ADUsers.csv in the $ADUsers variable
 
-$UserCSV   = 'C:\Users\z_ext_ex1\Documents\FilterUser.csv'
+$UserCSV   = 'C:\Users\z_ext_ex1\Documents\SampleUsers.csv'
 $OutputCSV = 'G:\UserStatusOutput.csv'
 $Users = Import-Csv -Path $UserCSV | Select-Object -ExpandProperty SamAccountName
 $date = (get-date).AddDays(-150)
@@ -38,29 +38,30 @@ $Results =foreach( $User in $Users )
 #'		'##########################################################################		
 #'		' Get the User Object based on the LDAP Path from Active Directory
 #'		'##########################################################################
-    $Account = Get-ADUser -Filter { SamAccountName -eq $User }
+    $Account = Get-ADUser -Filter { SamAccountName -eq $User } -Properties * 
    
-    $Expired = Get-ADUser -Filter {Accountexpirationdate -lt $date} -properties Accountexpirationdate | Select-Object Name, Accountexpirationdate
+    $Expired = Get-ADUser -Filter {Accountexpirationdate -lt $date} -properties Accountexpirationdate | Select-Object Name,Accountexpirationdate 
    
     if( $Account )
     {
          if( $Expired )
         {
-           $Account | Select-Object -Property SamAccountName, Enabled, Accountexpirationdate  
+           $Account | Select-Object -Property SamAccountName, Enabled, Accountexpirationdate 
+
         }
-        else{
-         $Account | Select-Object -Property SamAccountName, Enabled
-            }
+    else{
+                $Account | Select-Object -Property SamAccountName, Enabled 
         }
+        
     }
 
-       else{
+   else{
         [pscustomobject]@{
             SamAccountName = $User
             Enabled        = 'Account Not Found'
-            }
-        }
+       }
     }
+}
 
 
 #'		'##########################################################################
@@ -69,4 +70,4 @@ $Results =foreach( $User in $Users )
 
 $Results | Export-Csv -Path $OutputCSV -NoTypeInformation
 
-'	'##########################################################################
+#'	'##########################################################################

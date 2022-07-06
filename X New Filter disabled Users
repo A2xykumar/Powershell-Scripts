@@ -1,0 +1,121 @@
+########################################################################################
+# Record the time when the script starts running 
+# Exchange Mailbox Delete Report started at - "
+$CurrentDate = (Get-Date).tostring("dd-MM-yyyy-hh-mm")            
+New-Item -itemType File -Path G:\ -Name ("Exchange Mailbox Delete Report started at -"+$CurrentDate + ".txt")
+##################################################################################
+
+
+
+##################################################################################
+# Create a Log File Using FileSystemObject to record the updates 
+$CurrentDate = (Get-Date).tostring("dd-MM-yyyy-hh-mm-ss")            
+New-Item -itemType File -Path G:\ -Name ("Account Delate "+$CurrentDate + ".txt")
+
+#####################################################################################
+
+
+
+###########################################################################	
+ #Fetch the AD record based on Staff Number of the User
+#Store the data from ADUsers.csv in the $ADUsers variable
+
+$InputeUsersFile  = 'C:\Users\z_ext_ex1\Documents\SampleUsers.csv'
+$OutputFile = "G:\UserStatusOutput.txt"
+$Users = Import-Csv -Path $InputeUsersFile | Select-Object -ExpandProperty SamAccountName
+$StartDateRange = (get-date).AddDays(-150)
+$EndDateRange = (get-date).AddDays(-7)
+$DeleteComment = "The End *******************************************"
+"This is a test#####" | Out-File -FilePath G:\UserStatusOutput.txt
+Add-Content -Path G:\UserStatusOutput.txt -Value "This is a test*********" 
+
+###########################################################################
+
+
+###########################################################################
+# If a record exists in Active Directory, continue 
+###########################################################################
+$Results1 =foreach( $User in $Users )
+{
+
+##########################################################################		
+# Get the User Object based on the LDAP Path from Active Directory
+###########################################################################
+    $EnabledAccount = Get-ADUser -Filter { SamAccountName -eq $User } -Properties SamAccountname,Enabled,Accountexpirationdate
+   
+   ################################################################################
+   Add-Content -Path G:\UserStatusOutput.txt -Value "Following are the Enabled user list" 
+    if( $EnabledAccount )
+    {
+     #    if( $Account.Accountexpirationdate -ge $StartDateRange -and $Account.Accountexpirationdate -le $EndDateRange )
+     
+        if( $EnabledAccount.Enabled -eq "Ture")
+            {   
+                $EnabledAccount
+            }
+        else{
+                #      $Account | Select-Object -Property SamAccountName, Enabled 
+            }
+    }
+
+
+  # else{
+  #      [pscustomobject]@{
+  #          SamAccountName = $User
+  #          Enabled        = 'Account Not Found'
+  #     }
+  #  }
+  }
+  ###################################################################################################################################
+
+ 
+ 
+
+
+ $Results2 =foreach( $User in $Users )
+{
+
+##########################################################################		
+# Get the User Object based on the LDAP Path from Active Directory
+###########################################################################
+    $DisabledAccount = Get-ADUser -Filter { SamAccountName -eq $User } -Properties SamAccountname,Enabled,Accountexpirationdate
+   
+   ################################################################################
+   Add-Content -Path G:\UserStatusOutput.txt -Value "Following are the Enabled user list" 
+    if( $EnabledAccount )
+    {
+     #    if( $Account.Accountexpirationdate -ge $StartDateRange -and $Account.Accountexpirationdate -le $EndDateRange )
+     
+        if( $DisabledAccount.Enabled -ne "False")
+            {   
+                $DisabledAccount
+            }
+        else{
+                #      $Account | Select-Object -Property SamAccountName, Enabled 
+            }
+    }
+
+
+  # else{
+  #      [pscustomobject]@{
+  #          SamAccountName = $User
+  #          Enabled        = 'Account Not Found'
+  #     }
+  #  }
+  
+  
+
+}
+
+##########################################################################
+# Get user details to delete
+##########################################################################
+
+$Results1 + $Results2 | Select-Object -Property SamAccountName,Accountexpirationdate,Enabled |Ft -AutoSize | Out-File -FilePath $OutputFile -Append 
+
+Add-Content -Path G:\UserStatusOutput.txt -Value "This is a test*********" 
+
+
+
+
+##########################################################################

@@ -1,0 +1,308 @@
+cls
+########################################################################################
+# Record the time when the script starts running 
+# SAP - Exchange Synchronization Report started at - "
+$SAPExSyncTime = (Get-Date).tostring("dd-MM-yyyy")            
+New-Item -itemType File -Path G:\ -Name ("Exchange Synchronization at -"+$SAPExSyncTime + ".txt")
+
+##################################################################################
+
+
+
+################################################################################## 
+# Create a Log File Using FileSystemObject to record the updates  
+New-Item -itemType File -Path G:\ -Name ("Exchange Synchronization at -"+$SAPExSyncTime + ".log")
+$Logfile = "G:\SAP - Exchange Synchronization at -"+$SAPExSyncTime +".log"
+function WriteLog
+{
+Param ([string]$LogString)
+$Stamp = (Get-Date).toString("yyyy/MM/dd HH:mm:ss")
+$LogMessage = "$Stamp $LogString"
+Add-content $LogFile -value $LogMessage
+}
+WriteLog "The script is run $StartTime"
+WriteLog "Calculating…."
+#####################################################################################
+
+
+
+    $UserCSV = "C:\Users\z_ext_ex1\Documents\011 FilterUser.csv"
+    $ADUsers = Import-Csv -Path $UserCSV 
+
+$Results =foreach( $User in $ADUsers ){
+  if ($User -eq $ADUsers){
+  ##############################################################################
+		#	Initialize string variable to blank
+##############################################################################
+    $strOffAddr 	= $ADUsers.off_addr1
+	$strOffCity 	= $ADUsers.off_city
+	$strOffState 	= $ADUsers.off_state
+	$strOffPIN 		= $ADUsers.off_pin_code
+	$strResAddr 	= $ADUsers.cur_adr1
+	$strResCity 	= $ADUsers.cur_city
+	$strResPIN 		= $ADUsers.cur_pin
+    $StaffNo1       = $ADUsers.Staffno
+    $distinguishedName = $ADUsers.distinguishedName
+
+##############################################################################	
+#	Initialize string variable to blank
+##############################################################################
+	$strODirectNo = ""
+	$strODIDNo = ""
+	$strOBoardNo = ""
+	$strOFaxNo = ""
+	$strOMobileNo = ""
+	$strRDirectNo = ""
+	$strRBoardNo = "" 
+  # if record exist
+
+##########################################################################
+	#' If a record exists in Active Directory, continue 
+	# $b = Import-Csv -Path 'C:\Users\z_ext_ex1\Documents\FilterUser.csv' -Header "SamAccountName","extensionAttribute6"
+#####################################################################
+
+ # $Account = Get-ADUser -Filter { SamAccountName -eq $ADUsers } -Properties *
+  $objUser = Get-ADUser -Filter "EmployeeNumber -eq $StaffNo1 -AND ObjectClass -eq 'user' -AND ObjectCategory -eq 'Person'"
+
+	    $strTitle		= 	$ADUsers.desig
+		$strCompany		=	"BPCL" 
+		$strDepartment	= 	$ADUsers.dept_nm
+		$strOffice		= 	$ADUsers.loc_cd + " - " + $ADUsers.loc_nm
+		$strOfficeName	= 	$ADUsers.loc_nm
+		$strCountry		=	"INDIA"
+	#	$strMgr			=	$ADUsers$ADUsers.Mgr_Email_ID
+		$strEmployeeType = 	$ADUsers.cadre
+		$strMgrStaffNo	=	$ADUsers.Mgr_Staffno
+		$strSBUCode		=	$ADUsers.sbu_text
+		$strInternetEmailAddr =	$ADUsers.email_id
+		$strJobGroup	= 	$ADUsers.Jobgrp
+		$strRegion		= 	$ADUsers.pa
+		$StrSAPID		= 	$ADUsers.cadre + $StaffNo1
+		$StrMgrSAPID	=	$ADUsers.cadre  + $strMgrStaffNo	
+		$StrMgrSAPID	=	"M" + $strMgrStaffNo
+		$StrUSRGRP		=	$ADUsers.USRGRP
+        $strMgrEmailAddr = $ADUsers.mail
+
+    If ($ADUsers.cur_adr1 -ne "") {
+		$strResAddr =$ADUsers.cur_adr1 + ", " +$ADUsers.cur_adr2
+			if ($ADUsers.cur_adr3 -ne "")
+                {$strResAddr = $strResAddr + ", " + $ADUsers.cur_adr3}
+			If ($strResCity -ne "") {
+			$strResAddr = $strResAddr + ", " + $strResCity
+			}
+			If ( $strResPIN -ne "") {
+			$strResAddr = $strResAddr +", PIN - "+ $strResPIN
+			}
+		}
+
+      if ($ADUsers.off_addr2 -ne "") {
+			$strOffAddr	= 	$strOffAddr + ", " + $ADUsers.off_addr2
+			if ($ADUsers.off_addr3 -ne ""){
+				$strOffAddr = $strOffAddr +", "+ $ADUsers.off_addr3
+			}
+			if( $UserCSV.off_addr4 -ne ""){
+				$strOffAddr = $strOffAddr +", "+ $ADUsers.off_addr4
+		       }
+		}  
+
+      if($ADUsers.OFF_DIR -ne "") {
+			$strODirectNo	= $ADUsers.OFF_DIR
+		}
+		if ($ADUsers.RES_NUM -ne "") {
+			$strODIDNo	= 	 $ADUsers.RES_NUM
+		}
+		if ($ADUsers.OFF_NUM -ne "") {
+			if ($ADUsers.OFF_EXT -ne "") {
+				$strOBoardNo	=	$ADUsers.OFF_NUM + " Extn : " + $ADUsers.OFF_EXT
+			}
+            else{
+				$strOBoardNo	=	$ADUser.OFF_NUM
+			}
+		}
+       if ($ADUsers.FAX_NUM -ne "") {
+			$strOFaxNo	= 	$ADUsers.FAX_NUM
+		}
+		$strOMobileNo	= 	$ADUsers.MOBI_NUM
+		if ($ADUsers.RES_NUM -ne "") {
+			$strRDirectNo	= 	$ADUsers.RES_NUM
+	}
+##########################################################################
+	#' Set the Region name based on the Region code - personal area
+#####################################################################
+
+        If ($strRegion -eq "ER01")
+			    {$StrRegionName = "Eastern Region"}
+		ElseIf ($strRegion -eq "NR01") 
+                { $StrRegionName = "Northern Region"}
+		ElseIf ($strRegion -eq "SR01") 
+                {$StrRegionName = "Southern Region"}
+		ElseIf ($strRegion -eq "WR01") { 
+			$StrRegionName = "Western Region"}
+		ElseIf ($strRegion -eq "RF01") { 
+			$StrRegionName = "Refinery"}
+		ElseIf ($strRegion -eq "Y003") {
+			$StrRegionName = "Hospitality Area-East"}
+		ElseIf ($strRegion -eq "Y004") {
+			$StrRegionName = "Hospitality Area-North"}
+		ElseIf ($strRegion -eq "Y005") {
+			$StrRegionName = "Hospitality Area-South"}
+		ElseIf ($strRegion -eq "Y006") {
+			$StrRegionName = "Hospitality Area-West"}
+		ElseIf ($strRegion -eq "Y007") {
+			$StrRegionName = "Other Sites"}
+		ElseIf ($strRegion -eq "Y008") {
+			$StrRegionName = "Deput-Ministries and Others"}
+		ElseIf ($strRegion -eq "KR01") {
+			$StrRegionName = "Kochi Refinery"}
+		ElseIf ($strRegion -eq "Y009") {
+			$StrRegionName = "Deputation-Joint Ventures"}
+		Else{$StrRegionName = $strRegion}
+#>			
+##########################################################################
+		#' Update the User attributes 
+		##########################################################################
+#		Set-ADUser -Identity $ADUser -MobilePhone $_.MobilePhone 
+		Set-ADUser -Identity $objUser -Replace @{title = $strTitle} 
+        Set-ADUser -Identity $objUser -Replace @{extensionAttribute7 = $StrRegionName}
+		Set-ADUser -Identity $objUser -Replace @{company = $strCompany}  	
+
+		Set-ADUser -Identity $objUser -Replace @{Department = $strDepartment} 
+
+        Set-ADUser -Identity $objUser -Replace @{physicalDeliveryOfficeName = $strOfficeName}
+
+		Set-ADUser -Identity $objUser -Replace @{extensionAttribute1 = $StaffNo1}
+
+        Set-ADUser -Identity $objUser -Replace @{extensionAttribute4 = $strSBUCode}
+
+		Set-ADUser -Identity $objUser -Replace @{extensionAttribute5 = $strInternetEmailAddr }
+
+		If ($strJobGroup -ne "") 
+    {
+		Set-ADUser -Identity $objUser -Replace @{extensionAttribute6 = $strJobGroup} 
+    }				
+
+		
+
+		Set-ADUser -Identity $objUser -Replace @{extensionAttribute8 = $strOffice}
+
+		Set-ADUser -Identity $objUser -Replace @{extensionAttribute10 = $StrRegion}
+
+		Set-ADUser -Identity $objUser -Replace @{employeeType = $strEmployeeType}
+
+		Set-ADUser -Identity $objUser -Replace @{extensionAttribute13 = $StrSAPID}
+
+		Set-ADUser -Identity $objUser -Replace @{extensionAttribute14 = $StrMgrSAPID}
+        Set-ADUser -Identity $objUser -Replace @{extensionAttribute9 = $StrUSRGRP}
+
+
+#		'##########################################################################
+#		' Update the User phone attributes 
+#		'##########################################################################
+if ($strOffAddr -ne "") {
+			Set-ADUser -Identity $objUser -Replace @{streetaddress = $strOffAddr}}
+    		else 
+			{Set-ADUser -Identity $objUser -Replace @{streetaddress = ""}}
+		
+	
+		if ($strOffCity -ne "") {
+			Set-ADUser -Identity $objUser -Replace @{l = $strOffCity}}
+        else 
+			{Set-ADUser -Identity $objUser -Replace @{l = ""}}
+		
+		if ($strOffState -ne "") {
+			Set-ADUser -Identity $objUser -Replace @{st = $strOffState}}
+    		else{
+				Set-ADUser -Identity $objUser -Replace @{st = ""}}
+		
+		if ($strOffPIN -ne "") {
+			Set-ADUser -Identity $objUser -Replace @{postalcode = $strOffPIN}}
+    		else 
+			{Set-ADUser -Identity $objUser -Replace @{postalcode = ""}}
+	
+		If ($strResAddr -ne "") 
+        { Set-ADUser -Identity $objUser -Replace @{homepostaladdress = $strResAddr}}
+    		else {Set-ADUser -Identity $objUser -Replace @{homepostaladdress = ""}}
+	
+
+<#------------------------------------------------------------#>
+	if($strOBoardNo -ne "") {
+			Set-ADUser -Identity $objUser -Replace @{TelephoneNumber = $strOBoardNo}}
+    		else {
+				Set-ADUser -Identity $objUser -Replace @{TelephoneNumber = ""}}
+		
+		if ($strODirectNo -ne "") {
+			Set-ADUser -Identity $objUser -Replace @{othertelephone = $strODirectNo}}
+    		else {
+			Set-ADUser -Identity $objUser -Replace @{othertelephone = ""}}
+	######################################################################################
+		If ($strRBoardNo -ne $null) {
+			Set-ADUser -Identity $objUser -Replace @{homephone = $strRDirectNo}}
+    		else{
+    		Set-ADUser -Identity $objUser -homephone $null}
+###############################################################################
+		If  ($strRDirectNo -ne "") {
+			Set-ADUser -Identity $objUser -Replace @{otherhomephone = $strRDirectNo}}
+    		else {
+			Set-ADUser -Identity $objUser -Replace @{otherhomephone = ""}}
+		
+		if ($strODIDNo -ne "") {
+			Set-ADUser -Identity $objUser -Replace @{pager = $strODIDNo}}
+    		else {
+			Set-ADUser -Identity $objUser -Replace @{pager = ""}}
+		
+		If ($strOMobileNo -ne "") {
+			Set-ADUser -Identity $objUser -Replace @{mobile = $strOMobileNo}}
+    		else {
+			Set-ADUser -Identity $objUser -Replace @{mobile = ""}}
+		If($strOFaxNo -ne "") {
+			Set-ADUser -Identity $objUser -Replace @{FacsimileTelephoneNumber = $strOFaxNo}}
+        else{
+			Set-ADUser -Identity $objUser -Replace @{FacsimileTelephoneNumber = ""}}
+##########################################################################	
+#		Update manager information for the User
+##########################################################################
+		#objTextFile.writeline(strMgrStaffNo)
+		if ($strMgrStaffNo -eq 0) {
+
+			Set-ADUser -identity $objUser -manager $null 
+			Set-ADUser -identity $objUser -extensionAttribute2 $null			
+			Set-ADUser -identity $objUser -Replace @{extensionAttribute3 = $strMgrStaffNo}			
+		}		
+			
+		else {}
+	$objrs = Get-ADUser -Filter "EmployeeNumber -eq $StaffNo1 -AND ObjectClass -eq 'user' -AND ObjectCategory -eq 'Person'" | select distinguishedName
+
+
+############################################################################
+            If ($distinguishedName -ne "")
+            { 
+		        Set-ADUser -identity $objUser -Replace @{manager = $objrs.distinguishedName}}
+	           
+			if ($strMgrEmailAddr -ne "") {
+				Set-ADUser -Identity $objUser -Replace @{extensionAttribute2 =  $strMgrEmailAddr}}
+			Else{
+				Set-ADUser -Identity $objUser -Replace @{extensionAttribute2= ""}}
+			
+			Set-ADUser -Identity $objUser -Replace @{extensionAttribute3 = $strMgrStaffNo}
+
+
+
+##############################################################################
+# log file function
+
+Start-Sleep 1
+WriteLog "Attributes updated for user $env:USERNAME "
+############################################################################
+}
+
+
+
+
+# Final loop
+ } #For Each Loop
+ ##############################################################################
+# log file function
+Start-Sleep 1
+WriteLog "All users are updated successfully"
+WriteLog "The script is successfully executed"
+############################################################################

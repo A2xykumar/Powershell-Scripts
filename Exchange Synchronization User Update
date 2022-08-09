@@ -266,7 +266,7 @@ if ($User -eq $User){
 		'If strEmailAddress <> objUser.mail Then
 			'objUser.sAMAccountName = strAliasName
 			'objUser.SetInfo
-			'objUser.userPrincipalName = strAliasName & "@corp.bharatpetroleum.com"
+			'objUser.userPrincipalName = strAliasName & "@exampledomain.com"
 			'objUser.SetInfo
 			'objUser.mail = strEmailAddress
 			'objUser.SetInfo				

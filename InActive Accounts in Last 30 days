@@ -1,0 +1,32 @@
+    cls
+
+    # $Users = get-aduser z_ext_ex1 -properties * | select samaccountname
+    #Add-Content -Path E:\Employees.csv  -Value '"UsersSamAccount","UsersLastLogOnDate","ManagerSamAccount","ManagerEmailAddress","Whencreated"'
+
+    $timespan = New-Timespan –Days 30
+    $Users = Search-ADAccount –UsersOnly –AccountInactive –TimeSpan $timespan | select samaccountname
+
+foreach ($User in $Users){
+
+    $ManagerEmail = ""
+    $ManagerName = ""
+    $user1 = ""
+    #$user1.LastLogonDatelast = ""
+    $User1 = Get-ADUser $User.samaccountname -Properties *
+ 
+
+    if(($User1.Manager) -ne $null) 
+            {
+                $ManagerName = Get-ADUser $User1.Manager -Properties SamAccountName | select SamAccountName
+                $ManagerEmail =  Get-ADUser $User1.Manager -Properties EmailAddress | select EmailAddress
+            }
+
+    else{ #if manager Attribute is emplty.
+                $ManagerName = ""
+                $ManagerEmail = ""
+        } 
+
+#create CSV output file 
+    [pscustomobject]@{ UsersSamAccount =  $User1.SamAccountName ; UsersLastLogOnDate = $User1.LastLogonDate ; ManagerSamAccountName = $ManagerName.SamAccountName ; ManagerEmailAddress = $ManagerEmail.EmailAddress; WhenCreated = $user1.whenCreated } | Export-Csv -Path  E:\Employee.csv -Append -NoTypeInformation
+
+}
